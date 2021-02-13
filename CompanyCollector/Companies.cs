@@ -33,7 +33,7 @@ namespace CompanyCollector
 
             try
             {
-                for (int i = 0; i < pageAmount; i++)
+                for (int i = 0; i <= pageAmount; i++)
                 {
                     if (i > 0)
                     {
@@ -66,19 +66,11 @@ namespace CompanyCollector
 
         private List<string> GetCompaniesFromPage(string url)
         {
-            //launch gmail.com
             _driver.Navigate().GoToUrl(url);
 
-            //maximize the browser
-            //_driver.Manage().Window.Minimize();
+            //wait for 0.1 seconds
+            Task.Delay(100).Wait();
 
-            //find the element by xpath and enter the email address which you want to login.
-            //driver.FindElement(By.XPath("//input[@aria-label='Email or phone']")).SendKeys("email adress);
-
-            //wait for a seconds
-            Task.Delay(200).Wait();
-
-            //find the Next Button and click on it.
             
             var pages = _driver.FindElements(By.XPath("//a[contains(@class,'company-name')]"));
 
@@ -86,16 +78,17 @@ namespace CompanyCollector
 
             foreach(var a in pages)
             {
+                //Collecting cata of all companies from single page
                 var temp = _driver.CurrentWindowHandle;
                 string link = a.GetAttribute("href");
                 ((IJavaScriptExecutor)_driver).ExecuteScript("window.open();");
                 _driver.SwitchTo().Window(_driver.WindowHandles[1]);
                 _driver.Navigate().GoToUrl(link);
-                Task.Delay(10).Wait();
-                lst.Add(string.Join(",", GetDataPerCompany()));
+                Task.Delay(200).Wait();
+                lst.Add(string.Join(",", GetDataPerCompany())); //Compiling data of a single company into one string
                 _driver.Close();
                 _driver.SwitchTo().Window(_driver.WindowHandles[0]);
-                Task.Delay(10).Wait();
+                Task.Delay(200).Wait();
             }          
 
             return lst;
@@ -103,10 +96,22 @@ namespace CompanyCollector
 
         private List<string> GetDataPerCompany()
         {
+            //Collecting data of a single company
             List<string> line = new List<string>();
             line.Add(_driver.FindElement(By.XPath("//div[contains(@class, 'company-content')]/h3[contains(@itemprop, 'name')]")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
+            _logger(line[0]);
             line.Add(_driver.FindElement(By.XPath("//dd[contains(@class, 'company-country')]/span[2]")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
             line.Add(_driver.FindElement(By.XPath("//dd[contains(@itemprop, 'addressLocality')]/pre")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
+            try
+            {
+                line.Add(_driver.FindElement(By.XPath("//div[contains(@class, 'page__layout-sidebar--container-desktop')]/a[contains(@itemprop, 'url')]")).GetAttribute("href"));
+            }
+            catch (OpenQA.Selenium.NoSuchElementException)
+            {
+                
+                line.Add("This company has no website.");
+            }
+            
             line.Add(_driver.FindElement(By.XPath("//p[contains(@class, 'company-description')]")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
             return line;
         }
