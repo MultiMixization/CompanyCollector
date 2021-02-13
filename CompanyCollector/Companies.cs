@@ -17,7 +17,7 @@ namespace CompanyCollector
         {
             //Initialize options for Driver
             _options = new ChromeOptions();
-            _options.AddArguments(/*"headless",*/"--blink-settings=imagesEnabled=false");
+            _options.AddArguments("headless","--blink-settings=imagesEnabled=false");
 
             //Initialize the instance
             _driver = new ChromeDriver(_options);
@@ -91,11 +91,11 @@ namespace CompanyCollector
                 ((IJavaScriptExecutor)_driver).ExecuteScript("window.open();");
                 _driver.SwitchTo().Window(_driver.WindowHandles[1]);
                 _driver.Navigate().GoToUrl(link);
-                Task.Delay(100).Wait();
+                Task.Delay(10).Wait();
                 lst.Add(string.Join(",", GetDataPerCompany()));
                 _driver.Close();
                 _driver.SwitchTo().Window(_driver.WindowHandles[0]);
-                Task.Delay(100).Wait();
+                Task.Delay(10).Wait();
             }          
 
             return lst;
@@ -104,9 +104,10 @@ namespace CompanyCollector
         private List<string> GetDataPerCompany()
         {
             List<string> line = new List<string>();
-            line.Add(_driver.FindElement(By.XPath("//div[contains(@class, 'company-content')]/h3")).Text);
-            line.Add(_driver.FindElement(By.XPath("//dd[contains(@class, 'company-country')]/span")).Text);
-            line.Add(_driver.FindElement(By.XPath("//dd[contains(@itemprop, 'addressLocality')]/pre")).Text);
+            line.Add(_driver.FindElement(By.XPath("//div[contains(@class, 'company-content')]/h3[contains(@itemprop, 'name')]")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
+            line.Add(_driver.FindElement(By.XPath("//dd[contains(@class, 'company-country')]/span[2]")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
+            line.Add(_driver.FindElement(By.XPath("//dd[contains(@itemprop, 'addressLocality')]/pre")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
+            line.Add(_driver.FindElement(By.XPath("//p[contains(@class, 'company-description')]")).GetAttribute("innerText").Replace(",","").Replace("\r","").Replace("\n"," "));
             return line;
         }
 
